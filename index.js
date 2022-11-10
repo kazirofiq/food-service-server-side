@@ -16,8 +16,15 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
     try{
         const serviceCollection = client.db('foodService').collection('services');
+        const orderCollection = client.db('foodService').collection('orders');
 
         app.get('/services', async (req, res) => {
+            const query = {}
+            const cursor = serviceCollection.find(query);
+            const services = await cursor.limit(3).toArray();
+            res.send(services);
+        });
+        app.get('/service', async (req, res) => {
             const query = {}
             const cursor = serviceCollection.find(query);
             const services = await cursor.toArray();
@@ -29,6 +36,31 @@ async function run(){
             const query = { _id: ObjectId(id) };
             const service = await serviceCollection.findOne(query);
             res.send(service);
+        });
+        // orders api
+
+        app.get('/orders', async (req, res) => {
+            const decoded = req.decoded;
+            
+            // if(decoded.email !== req.query.email){
+            //     res.status(403).send({message: 'unauthorized access'})
+            // }
+
+            let query = {};
+            if (req.query.email) {
+                query = {
+                    email: req.query.email
+                }
+            }
+            const cursor = orderCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders);
+        });
+
+        app.post('/orders', async (req, res) => {
+            const order = req.body;
+            const result = await orderCollection.insertOne(order);
+            res.send(result);
         });
     }
     finally{
