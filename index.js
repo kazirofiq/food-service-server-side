@@ -41,6 +41,12 @@ async function run(){
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d'})
             res.send({token})
         })
+        app.post('/services', async(req, res) =>{
+            const user = req.body;
+            console.log(user);
+            const result = await serviceCollection.insertOne(user)
+            res.send(result);
+        })
         app.get('/services', async (req, res) => {
             const query = {}
             const cursor = serviceCollection.find(query);
@@ -49,7 +55,7 @@ async function run(){
         });
         app.get('/service', async (req, res) => {
             const query = {}
-            const cursor = serviceCollection.find(query);
+            const cursor = serviceCollection.find(query).sort({_id:-1});
             const services = await cursor.toArray();
             res.send(services);
         });
@@ -62,31 +68,33 @@ async function run(){
         });
         // orders api
 
-        app.get('/orders', verifyJWT, async (req, res) => {
-            const decoded = req.decoded;
+        app.get('/orders', async (req, res) => {
+            // const decoded = req.decoded;
             
-            if(decoded.email !== req.query.email){
-                res.status(403).send({message: 'unauthorized access'})
-            }
+            // if(decoded.email !== req.query.email){
+            //     res.status(403).send({message: 'unauthorized access'})
+            // }
 
             let query = {};
-            if (req.query.email) {
-                query = {
-                    email: req.query.email
-                }
-            }
+            // if (req.query.email) {
+            //     query = {
+            //         email: req.query.email
+            //     }
+            // }
             const cursor = orderCollection.find(query);
             const orders = await cursor.toArray();
             res.send(orders);
         });
 
-        app.post('/orders', verifyJWT, async (req, res) => {
+        
+
+        app.post('/orders', async (req, res) => {
             const order = req.body;
             const result = await orderCollection.insertOne(order);
             res.send(result);
         });
 
-        app.patch('/orders/:id', verifyJWT, async (req, res) => {
+        app.patch('/orders/:id', async (req, res) => {
             const id = req.params.id;
             const status = req.body.status
             const query = { _id: ObjectId(id) }
@@ -99,7 +107,7 @@ async function run(){
             res.send(result);
         })
 
-        app.delete('/orders/:id', verifyJWT, async (req, res) => {
+        app.delete('/orders/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await orderCollection.deleteOne(query);
